@@ -1,0 +1,44 @@
+NAME CLST
+
+#include <eikon.rh>
+#include <avkon.rh>
+#include <avkon.rsg>
+#include <appinfo.rh>
+
+RESOURCE RSS_SIGNATURE { }
+
+
+RESOURCE TBUF r_default_document_name 
+    { buf="cceleste"; }
+
+RESOURCE EIK_APP_INFO
+    {
+    menubar=r_app_menubar;
+    cba=R_AVKON_SOFTKEYS_EMPTY;
+
+    }
+
+RESOURCE MENU_BAR r_app_menubar
+{
+    titles=
+        {
+        MENU_TITLE {
+	    menu_pane=R_AVKON_MENUPANE_EMPTY;
+}
+        };
+    }
+
+RESOURCE LOCALISABLE_APP_INFO r_localisable_app_info
+    {
+    short_caption = "cceleste";
+    caption_and_icon = CAPTION_AND_ICON_INFO
+        {
+            caption = "cceleste";
+            number_of_icons = 1;
+            icon_file = "\\resource\\apps\\cceleste_aif.mbm";
+        
+        };
+    }
+    
+
+// End of File

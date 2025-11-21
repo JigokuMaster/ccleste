@@ -13,3 +13,7 @@ em-build/
 ccleste-win.zip
 ccleste-input-cfg.txt
 ccleste-start-fullscreen.txt
+symbian/sis/*.sis
+symbian/sis/*.sisx
+symbian/sis/*.cer
+symbian/sis/*.key

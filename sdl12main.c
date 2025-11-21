@@ -15,6 +15,11 @@
 #include <3ds.h>
 #endif
 #include "celeste.h"
+#ifdef __SYMBIAN32__
+#include <unistd.h>
+#include <fcntl.h>
+extern void EPOC_SetAudioVolume(int);
+#endif
 
 static void ErrLog(char* fmt, ...) {
 #ifdef _3DS
@@ -30,7 +35,6 @@ static void ErrLog(char* fmt, ...) {
 	va_start(ap, fmt);
 	vfprintf(f, fmt, ap);
 	va_end(ap);
-
 	if (f != stderr && f != stdout) fclose(f);
 }
 
@@ -237,6 +241,7 @@ static void* game_state = NULL;
 static Mix_Music* game_state_music = NULL;
 static void mainLoop(void);
 static FILE* TAS = NULL;
+#define  STATE_FILE "cceleste.sav"
 
 #ifdef _3DS
 // hack: newer SDL versions remove SDL_N3DSKeyBind, but I'm too lazy to change the
@@ -271,8 +276,112 @@ static Uint8 *n3ds_get_fake_key_state(int *numkeys) {
 }
 #endif
 
+
+static void toggle_audio()
+{
+		static int audio_enabled;
+		audio_enabled = Mix_PlayingMusic();
+    if(audio_enabled)
+    {
+        if(Mix_Playing(-1))
+        {
+            Mix_HaltChannel(-1);
+        }
+        Mix_HaltMusic();
+        audio_enabled = 0;
+    }
+    else
+    {
+				if(current_music != NULL)
+				{
+        	audio_enabled = 1;
+        	Mix_PlayMusic(current_music, -1);
+				}
+    }
+    OSDset("audio: %s", audio_enabled ? "on" : "off");
+}
+
+void set_audio_volume(int f)
+{
+		static int audio_volume = MIX_MAX_VOLUME;
+		if(current_music != NULL)
+		{
+			audio_volume = SDL_max(0, audio_volume + f);
+  		audio_volume = SDL_min(audio_volume, MIX_MAX_VOLUME);
+			Mix_Volume(-1, audio_volume);
+			Mix_VolumeMusic(audio_volume);
+  		OSDset("audio volume: %d/%d", audio_volume, MIX_MAX_VOLUME);
+		}
+}
+
+static void take_screenshot()
+{
+		time_t ltime;
+		struct tm *today;
+		char ss_fp[256];
+		char date_str[101];
+		time(&ltime);
+		today = localtime(&ltime);
+		strftime (date_str,100,"%Y%m%d_%H%M",today);
+		snprintf(ss_fp, 255, "C:\\data\\cceleste_%s.bmp", date_str);
+		printf("Saved screenshot %s\n", ss_fp);
+		if(SDL_SaveBMP(screen, ss_fp) == 0) OSDset("screenshot saved");
+		else
+		{ 
+			fprintf(stderr, "Failed to save screenshot! %s\n", SDL_GetError());
+		}
+}
+
+
+static void store_state()
+{
+		FILE* f;
+		game_state = game_state ? game_state : SDL_malloc(Celeste_P8_get_state_size());
+		if(game_state  && (f = fopen(STATE_FILE, "wb")))
+    {
+			Celeste_P8_save_state(game_state);			
+			fwrite(game_state, 1, Celeste_P8_get_state_size(), f);
+      fclose(f);
+		}
+}
+
+static void read_saved_state(int load)
+{
+		FILE* f = fopen(STATE_FILE, "rb");
+  	if(f == NULL)
+		{
+			return;
+		}
+
+  	fseek(f, 0, SEEK_END);
+    long fsize = ftell(f);
+		size_t state_size = Celeste_P8_get_state_size();
+		if(fsize == state_size)
+		{
+	    fseek(f, 0, SEEK_SET);
+			game_state = game_state ? game_state : SDL_malloc(state_size);
+			if(game_state && (fread(game_state, 1, fsize, f) == fsize))
+			{
+				if(load)Celeste_P8_load_state(game_state);
+			}
+			else
+			{
+				perror("load state failed!");
+			}
+		}
+    fclose(f);
+}
+
 int main(int argc, char** argv) {
+#ifdef __SYMBIAN32__
+    /* setup log files...*/
+    int fd = open("D:\\cceleste.log", O_WRONLY | O_CREAT | O_TRUNC);
+    dup2(fd, 1); 
+    dup2(fd, 2);
+		scale = 1;
+#endif	
 	SDL_CHECK(SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO) == 0);
+
 #if SDL_MAJOR_VERSION >= 2
 	SDL_InitSubSystem(SDL_INIT_GAMECONTROLLER);
 	SDL_GameControllerAddMappingsFromRW(SDL_RWFromFile("gamecontrollerdb.txt", "rb"), 1);
@@ -297,13 +406,20 @@ int main(int argc, char** argv) {
 #endif
 	SDL_CHECK(screen = SDL_SetVideoMode(PICO8_W*scale, PICO8_H*scale, 32, videoflag));
 	SDL_WM_SetCaption("Celeste", NULL);
+#if (SDL__MIXER_MAJOR_VERSION > 1) && (SDL_MIXER_PATCHLEVEL > 8)
+
 	int mixflag = MIX_INIT_OGG;
 	if (Mix_Init(mixflag) != mixflag) {
 		ErrLog("Mix_Init: %s\n", Mix_GetError());
 	}
+#endif	
 	if (Mix_OpenAudio(22050, AUDIO_S16SYS, 1, 1024) < 0) {
 		ErrLog("Mix_Init: %s\n", Mix_GetError());
 	}
+
+#ifdef __SYMBIAN32__
+	EPOC_SetAudioVolume(30);
+#endif
 	ResetPalette();
 	SDL_ShowCursor(0);
 
@@ -366,7 +482,7 @@ int main(int argc, char** argv) {
 	}
 
 	Celeste_P8_init();
-
+	read_saved_state(1);
 	printf("ready\n");
 	{
 		FILE* start_fullscreen_f = fopen("ccleste-start-fullscreen.txt", "r");
@@ -402,7 +518,9 @@ int main(int argc, char** argv) {
 	}
 
 	Mix_CloseAudio();
+#if (SDL__MIXER_MAJOR_VERSION > 1) && (SDL_MIXER_PATCHLEVEL > 8)
 	Mix_Quit();
+#endif	
 	SDL_Quit();
 	return 0;
 }
@@ -418,6 +536,7 @@ enum {
 static void ReadGamepadInput(Uint16* out_buttons);
 #endif
 
+
 static void mainLoop(void) {
 	const Uint8* kbstate = SDL_GetKeyState(NULL);
 		
@@ -426,6 +545,8 @@ static void mainLoop(void) {
 	if (initial_game_state != NULL
 #ifdef _3DS
 			&& kbstate[SDLK_LSHIFT] && kbstate[SDLK_ESCAPE] && kbstate[SDLK_F11]
+#elif defined(__SYMBIAN32__)
+		&& kbstate[SDLK_9]
 #else
 			&& kbstate[SDLK_F9]
 #endif
@@ -479,13 +600,48 @@ static void mainLoop(void) {
 #if SDL_MAJOR_VERSION >= 2
 			if (ev.key.repeat) break; //no key repeat
 #endif
-			if (ev.key.keysym.sym == SDLK_ESCAPE) { //do pause
+			if (ev.key.keysym.sym == SDLK_0)
+			{
+				toggle_audio();
+				break;
+			}
+
+			else if (ev.key.keysym.sym == SDLK_ASTERISK)
+			{
+				set_audio_volume(-5);
+				break;
+			}
+			else if (ev.key.keysym.sym == SDLK_HASH)
+			{
+				set_audio_volume(5);
+				break;
+			}
+
+#ifdef __SYMBIAN32__
+			else if (ev.key.keysym.sym == SDLK_HOME)
+			{
+				take_screenshot();
+				break;
+			}
+			else if (ev.key.keysym.sym == SDLK_SPACE) // options key 		
+#else			
+			else if (ev.key.keysym.sym == SDLK_ESCAPE) 
+#endif				
+			{ //do pause
 				toggle_pause:
 				if (paused) Mix_Resume(-1), Mix_ResumeMusic(); else Mix_Pause(-1), Mix_PauseMusic();
 				paused = !paused;
 				break;
-			} else if (ev.key.keysym.sym == SDLK_DELETE) { //exit
+			}
+#ifdef __SYMBIAN32__
+			else if (ev.key.keysym.sym == SDLK_ESCAPE)
+#else
+			else if (ev.key.keysym.sym == SDLK_DELETE)			
+#endif
+
+			{ //exit
 				press_exit:
+				store_state();
 				running = 0;
 				break;
 			} else if (ev.key.keysym.sym == SDLK_F11 && !(kbstate[SDLK_LSHIFT] || kbstate[SDLK_ESCAPE])) {
@@ -504,10 +660,12 @@ static void mainLoop(void) {
 					OSDset("save state");
 					Celeste_P8_save_state(game_state);
 					game_state_music = current_music;
+					store_state();
 				}
 				break;
 			} else if (ev.key.keysym.sym == SDLK_d && kbstate[SDLK_LSHIFT]) { //load state
 				load_state:
+				read_saved_state(0);
 				if (game_state) {
 					OSDset("load state");
 					if (paused) paused = 0, Mix_Resume(-1), Mix_ResumeMusic();
@@ -522,6 +680,9 @@ static void mainLoop(void) {
 			} else if ( //toggle screenshake (e / L+R)
 #ifdef _3DS
 					(ev.key.keysym.sym == SDLK_d && kbstate[SDLK_s]) || (ev.key.keysym.sym == SDLK_s && kbstate[SDLK_d])
+#elif defined(__SYMBIAN32__)
+						ev.key.keysym.sym == SDLK_1
+				
 #else
 					ev.key.keysym.sym == SDLK_e
 #endif
@@ -537,8 +698,13 @@ static void mainLoop(void) {
 		if (kbstate[SDLK_RIGHT]) buttons_state |= (1<<1);
 		if (kbstate[SDLK_UP])    buttons_state |= (1<<2);
 		if (kbstate[SDLK_DOWN])  buttons_state |= (1<<3);
+#ifdef __SYMBIAN32__		
+		if (kbstate[SDLK_5] || kbstate[SDLK_RETURN]) buttons_state |= (1<<4);
+		if (kbstate[SDLK_7]) buttons_state |= (1<<5);
+#else
 		if (kbstate[SDLK_z] || kbstate[SDLK_c] || kbstate[SDLK_n]) buttons_state |= (1<<4);
 		if (kbstate[SDLK_x] || kbstate[SDLK_v] || kbstate[SDLK_m]) buttons_state |= (1<<5);
+#endif		
 	} else if (TAS && !paused) {
 		static int t = 0;
 		t++;

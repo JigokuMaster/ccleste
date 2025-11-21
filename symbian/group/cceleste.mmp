@@ -1,0 +1,54 @@
+OPTION GCCE -std=gnu99
+#define OPENC OPENC
+//MACRO CELESTE_P8_FIXEDP
+
+TARGET cceleste.exe
+TARGETTYPE exe
+UID 0 0xA010131B
+CAPABILITY ReadUserData WriteUserData
+EPOCHEAPSIZE 6000000 64000000
+EPOCSTACKSIZE 80000
+
+USERINCLUDE ..\..
+SYSTEMINCLUDE \epoc32\include \epoc32\include\SDL
+#ifdef OPENC
+MACRO OPENC
+SYSTEMINCLUDE \epoc32\include\stdapis
+#else
+SYSTEMINCLUDE \epoc32\include\libc
+#endif
+
+SOURCE ..\..\celeste.c 
+SOURCE ..\..\sdl12main.c
+
+SOURCEPATH ..\src
+SOURCE sdlapp.cpp
+
+
+
+SOURCEPATH ..\data
+START RESOURCE  cceleste.rss
+HEADER
+TARGET          cceleste
+TARGETPATH      resource\apps
+END  // RESOURCE
+
+SOURCEPATH ..\data
+START RESOURCE cceleste_reg.rss
+TARGET cceleste_reg
+TARGETPATH \private\10003a3f\import\apps
+END
+
+
+LIBRARY		euser.lib fbscli.lib ws32.lib  gdi.lib
+LIBRARY		mediaclientaudiostream.lib
+LIBRARY		avkon.lib efsrv.lib bafl.lib apparc.lib apgrfx.lib
+LIBRARY		eikcore.lib cone.lib bitgdi.lib scdv.lib hal.lib
+#ifdef OPENC
+LIBRARY		libc.lib
+LIBRARY		libm.lib
+#else
+LIBRARY		estlib.lib
+#endif
+STATICLIBRARY	SDL.lib SDL_mixer.lib vorbis.lib
+

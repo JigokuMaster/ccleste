@@ -1,0 +1,61 @@
+; Installation file for Snapper application
+;
+; This is an auto-generated PKG file by Carbide.
+; This file uses variables specific to Carbide builds that will not work
+; on command-line builds. If you want to use this generated PKG file from the
+; command-line tools you will need to modify the variables with the appropriate
+; values: $(EPOCROOT), $(PLATFORM), $(TARGET)
+;
+;Language - standard language definitions
+&EN
+
+; standard SIS file header
+#{"cceleste"},(0xa010131b),1,4,0
+
+;Localised Vendor name
+%{"github.com/JigokuMaster"} : "github.com/JigokuMaster"
+
+
+;Supports Series 60 v 3.0
+[0x101F7961], 0, 0, 0, {"Series60ProductID"}
+
+
+;Files to install
+;You should change the source paths to match that of your environment
+;<source> <destination>
+"\epoc32\release\gcce\urel\cceleste.exe"-"!:\sys\bin\cceleste.exe"
+"\epoc32\data\z\private\10003a3f\import\apps\cceleste_reg.rsc"	-"!:\private\10003a3f\import\apps\cceleste_reg.rsc"
+"\epoc32\data\z\resource\apps\cceleste.rsc" -"!:\resource\apps\cceleste.rsc"
+"..\gfx\cceleste_aif.mbm"-"!:\resource\apps\cceleste_aif.mbm"
+"..\..\data\font.bmp" -"!:\private\a010131b\data\font.bmp"
+"..\..\data\gfx.bmp" -"!:\private\a010131b\data\gfx.bmp"
+;"..\..\data\logo.bmp" -"!:\private\a010131b\data\logo.bmp"
+
+"..\..\data\mus0.ogg" -"!:\private\a010131b\data\mus0.ogg"
+"..\..\data\mus10.ogg" -"!:\private\a010131b\data\mus10.ogg"
+"..\..\data\mus20.ogg" -"!:\private\a010131b\data\mus20.ogg"
+"..\..\data\mus30.ogg" -"!:\private\a010131b\data\mus30.ogg"
+"..\..\data\mus40.ogg" -"!:\private\a010131b\data\mus40.ogg"
+"..\..\data\snd0.wav" -"!:\private\a010131b\data\snd0.wav"
+"..\..\data\snd1.wav" -"!:\private\a010131b\data\snd1.wav"
+"..\..\data\snd13.wav" -"!:\private\a010131b\data\snd13.wav"
+"..\..\data\snd14.wav" -"!:\private\a010131b\data\snd14.wav"
+"..\..\data\snd15.wav" -"!:\private\a010131b\data\snd15.wav"
+"..\..\data\snd16.wav" -"!:\private\a010131b\data\snd16.wav"
+"..\..\data\snd2.wav" -"!:\private\a010131b\data\snd2.wav"
+"..\..\data\snd23.wav" -"!:\private\a010131b\data\snd23.wav"
+"..\..\data\snd3.wav" -"!:\private\a010131b\data\snd3.wav"
+"..\..\data\snd35.wav" -"!:\private\a010131b\data\snd35.wav"
+"..\..\data\snd37.wav" -"!:\private\a010131b\data\snd37.wav"
+"..\..\data\snd38.wav" -"!:\private\a010131b\data\snd38.wav"
+"..\..\data\snd4.wav" -"!:\private\a010131b\data\snd4.wav"
+"..\..\data\snd40.wav" -"!:\private\a010131b\data\snd40.wav"
+"..\..\data\snd5.wav" -"!:\private\a010131b\data\snd5.wav"
+"..\..\data\snd50.wav" -"!:\private\a010131b\data\snd50.wav"
+"..\..\data\snd51.wav" -"!:\private\a010131b\data\snd51.wav"
+"..\..\data\snd54.wav" -"!:\private\a010131b\data\snd54.wav"
+"..\..\data\snd55.wav" -"!:\private\a010131b\data\snd55.wav"
+"..\..\data\snd6.wav" -"!:\private\a010131b\data\snd6.wav"
+"..\..\data\snd7.wav" -"!:\private\a010131b\data\snd7.wav"
+"..\..\data\snd8.wav" -"!:\private\a010131b\data\snd8.wav"
+"..\..\data\snd9.wav" -"!:\private\a010131b\data\snd9.wav"
