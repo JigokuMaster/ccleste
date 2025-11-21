@@ -7,7 +7,7 @@ C/SDL port of Celeste classic built for Symbian S60 v3.
 * Auto save/load state when closing/opening the game.
 * Ability to take screenshot.
 * Ability to disable/enable music.
-* Ability adjust audio volume.
+* Ability to adjust audio volume.
 
 
 # Installation

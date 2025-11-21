@@ -10,7 +10,7 @@
 &EN
 
 ; standard SIS file header
-#{"cceleste"},(0xa010131b),1,4,0
+#{"cceleste"},(0xa010131b),1,8,0
 
 ;Localised Vendor name
 %{"github.com/JigokuMaster"} : "github.com/JigokuMaster"
